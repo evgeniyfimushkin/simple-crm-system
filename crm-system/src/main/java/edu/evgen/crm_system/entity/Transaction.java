@@ -22,10 +22,6 @@ public class Transaction {
     @JoinColumn(name = "seller_id")
     private Seller seller;
 
-    @Transient
-    @NotNull(message = "Seller ID is required")
-    private Long sellerId;
-
     @NotNull(message = "Amount is required")
     @DecimalMin(value = "0.0",
             inclusive = false,

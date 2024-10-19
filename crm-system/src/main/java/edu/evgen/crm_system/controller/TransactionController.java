@@ -66,23 +66,37 @@ public class TransactionController {
         }
     }
 
-//    @PutMapping("/{id}")
-//    ResponseEntity<?> updateTransaction(
-//            @PathVariable Long id,
-//            @RequestBody Transaction transaction) {
-//        Optional<Transaction> existingTransaction = transactionRepository.findById(id);
-//        if (existingTransaction.isPresent()) {
-//            Transaction transactionToUpdate = existingTransaction.get();
-//            try {
-////                Transaction updatedTransaction = transactionService.updateTransaction(transactionToUpdate, id);
-////                return ResponseEntity.ok(updatedTransaction);
-//            } catch (Exception e) {
-//                return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Failed to create transaction:
-//                " + e.getMessage());
-//            }
-//
-//        }else {
-//            return ResponseEntity.notFound().build();
-//        }
-//    }
+
+    @PutMapping("/{id}")
+    ResponseEntity<?> updateTransaction(
+            @PathVariable Long id,
+            @Valid @RequestBody Transaction transaction,
+            BindingResult bindingResult) {
+
+        if(bindingResult.hasErrors()){
+            return ResponseEntity.badRequest().body(bindingResult.getAllErrors());
+        }
+
+        Optional<Transaction> existingTransaction = transactionRepository.findById(id);
+        if (existingTransaction.isPresent()) {
+            try {
+                Transaction updatedTransaction = transactionService.updateTransaction(transaction, id);
+                return ResponseEntity.ok(updatedTransaction);
+            } catch (Exception e) {
+                return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Failed to create transaction: " + e.getMessage());
+            }
+
+        }else {
+            return ResponseEntity.notFound().build();
+        }
+    }
+
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> deleteTransaction(@PathVariable Long id){
+        if (transactionRepository.existsById(id)){
+            transactionRepository.deleteById(id);
+            return ResponseEntity.noContent().build();
+        }else return ResponseEntity.notFound().build();
+    }
+
 }
