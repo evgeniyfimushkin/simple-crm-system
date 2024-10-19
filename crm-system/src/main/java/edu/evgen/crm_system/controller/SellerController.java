@@ -2,9 +2,11 @@ package edu.evgen.crm_system.controller;
 
 import edu.evgen.crm_system.entity.Seller;
 import edu.evgen.crm_system.repository.SellerRepository;
+import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.Date;
@@ -45,23 +47,35 @@ public class SellerController {
     }
 
     @PostMapping
-    public ResponseEntity<Seller> createSeller(@RequestBody Seller seller) {
+    public ResponseEntity<?> createSeller(
+            @Valid @RequestBody Seller seller,
+            BindingResult bindingResult) {
+        if (bindingResult.hasErrors()) {
+            return ResponseEntity.badRequest().body(bindingResult.getAllErrors());
+        }
         seller.setRegistrationDate(new Date());
-        Seller createdSeller = sellerRepository.save(seller);
-        return ResponseEntity.status(HttpStatus.CREATED).body(createdSeller);
+        try {
+            Seller createdSeller = sellerRepository.save(seller);
+            return ResponseEntity.status(HttpStatus.CREATED).body(createdSeller);
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Failed to create transaction: " + e.getMessage());
+        }
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<Seller> updateSeller(
+    public ResponseEntity<?> updateSeller(
             @PathVariable Long id,
-            @RequestBody Seller sellerDetails) {
+            @Valid @RequestBody Seller sellerDetails,
+            BindingResult bindingResult) {
+        if (bindingResult.hasErrors()) {
+            return ResponseEntity.badRequest().body(bindingResult.getAllErrors());
+        }
         Optional<Seller> currentSeller = sellerRepository.findById(id);
 
         if (currentSeller.isPresent()) {
             Seller sellerToUpdate = currentSeller.get();
             sellerToUpdate.setName(sellerDetails.getName());
             sellerToUpdate.setContactInfo(sellerDetails.getContactInfo());
-            sellerToUpdate.setRegistrationDate(sellerDetails.getRegistrationDate());
 
             Seller updatedSeller = sellerRepository.save(sellerToUpdate);
             return ResponseEntity.ok(updatedSeller);
